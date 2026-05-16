@@ -1,0 +1,9 @@
+services:
+  meshtastic-chat:
+    build: .
+    container_name: meshtastic-chat
+    restart: unless-stopped
+    ports:
+      - "8124:8124"
+    env_file:
+      - .env

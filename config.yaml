@@ -1,0 +1,55 @@
+name: Meshtastic Chat Archive
+version: 0.2.0
+slug: meshtastic_chat_archive
+description: Persistent Meshtastic MQTT chat archive with external MariaDB storage
+url: https://github.com/local/meshtastic-home-assistant-apps
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8124
+panel_icon: mdi:message-text
+ports:
+  8124/tcp: 8124
+ports_description:
+  8124/tcp: Optional direct web access outside Home Assistant ingress
+options:
+  mqtt_host: core-mosquitto
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+  mqtt_tls: false
+  mqtt_client_id: meshtastic-chat-archive
+  mqtt_topics:
+    - msh/+/2/json/+/+
+    - msh/+/2/e/+/+
+    - msh/+/2/c/+/+
+  db_host: core-mariadb
+  db_port: 3306
+  db_name: meshtastic_chat
+  db_user: meshtastic
+  db_password: ""
+  send_topic: ""
+  poll_interval_seconds: 7
+schema:
+  mqtt_host: str
+  mqtt_port: port
+  mqtt_username: str?
+  mqtt_password: password?
+  mqtt_tls: bool
+  mqtt_client_id: str
+  mqtt_topics:
+    - str
+  db_host: str
+  db_port: port
+  db_name: str
+  db_user: str
+  db_password: password
+  send_topic: str?
+  poll_interval_seconds: int(5,60)
