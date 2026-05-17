@@ -56,8 +56,8 @@ class MeshtasticChatPanel extends HTMLElement {
 
   async refresh() {
     if (this.searchMode) return;
-    await this.loadConversations(false);
-    if (this.activeKey) await this.loadMessages(false);
+    await this.loadConversations(true);
+    if (this.activeKey) await this.loadMessages(true);
   }
 
   async loadConversations(shouldRender = true) {
