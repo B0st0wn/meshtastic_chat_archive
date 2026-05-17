@@ -1,3 +1,6 @@
-name: Paul's Home Assistant Add-ons
+name: Meshtastic Chat Archive
+version: 0.2.0
+slug: meshtastic_chat_archive
+description: Persistent Meshtastic MQTT chat archive with external MariaDB storage
 url: https://github.com/B0st0wn/meshtastic_chat_archive
 maintainer: Paul Hanlon <paulfhanlon@gmail.com>
