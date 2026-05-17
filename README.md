@@ -97,6 +97,7 @@ Conversation keys use:
 The same app can run outside Home Assistant:
 
 ```bash
+cd meshtastic_chat_archive
 cp .env.example .env
 docker compose up -d --build
 ```

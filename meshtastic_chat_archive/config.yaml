@@ -2,7 +2,7 @@ name: Meshtastic Chat Archive
 version: 0.2.0
 slug: meshtastic_chat_archive
 description: Persistent Meshtastic MQTT chat archive with external MariaDB storage
-url: https://github.com/local/meshtastic-home-assistant-apps
+url: https://github.com/B0st0wn/meshtastic_chat_archive
 arch:
   - aarch64
   - amd64
