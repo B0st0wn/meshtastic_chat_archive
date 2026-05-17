@@ -236,20 +236,28 @@ class MqttWorker:
         if not normalized:
             LOGGER.info("JSON on %s had no text field — stored raw, skipped chat archive (keys=%s)", topic, list(data.keys()))
             return
-        LOGGER.info("Archived message: conv=%s from=%s text=%r", normalized["conversation_key"], normalized.get("sender_node_id"), normalized["text"][:60])
 
-        self.db.upsert_node(
-            normalized.get("sender_node_id"),
-            normalized.get("sender_node_num"),
-            normalized.get("sender_long_name"),
-            normalized.get("sender_short_name"),
-            payload_json,
-            normalized["timestamp"],
-        )
-        self.db.ensure_conversation(
-            normalized["conversation_key"],
-            normalized["conversation_title"],
-            normalized.get("channel"),
-            normalized["timestamp"],
-        )
-        self.db.insert_message(normalized)
+        try:
+            self.db.upsert_node(
+                normalized.get("sender_node_id"),
+                normalized.get("sender_node_num"),
+                normalized.get("sender_long_name"),
+                normalized.get("sender_short_name"),
+                payload_json,
+                normalized["timestamp"],
+            )
+            self.db.ensure_conversation(
+                normalized["conversation_key"],
+                normalized["conversation_title"],
+                normalized.get("channel"),
+                normalized["timestamp"],
+            )
+            inserted = self.db.insert_message(normalized)
+        except Exception:
+            LOGGER.exception("DB write failed for message on %s (conv=%s text=%r)", topic, normalized["conversation_key"], normalized["text"][:60])
+            return
+
+        if inserted:
+            LOGGER.info("Archived: conv=%s from=%s text=%r", normalized["conversation_key"], normalized.get("sender_node_id"), normalized["text"][:60])
+        else:
+            LOGGER.info("Duplicate (already in DB, skipped): conv=%s packet_id=%s text=%r", normalized["conversation_key"], normalized.get("packet_id"), normalized["text"][:60])
