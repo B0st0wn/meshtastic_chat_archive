@@ -168,27 +168,23 @@ h1 {
 
 .message-delete {
   margin-left: auto;
-  padding: 0 7px;
-  border: 1px solid transparent;
+  padding: 2px 8px;
+  border: 1px solid #d9e2e0;
   border-radius: 4px;
   color: #98a3aa;
-  background: transparent;
-  font-size: 16px;
+  background: #f7f9f9;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
 
-.message:hover .message-delete,
+.message-delete:hover,
 .message-delete:focus {
-  opacity: 1;
-}
-
-.message-delete:hover {
   color: #b3261e;
   background: #fdecea;
   border-color: #f3c7c2;
+  outline: none;
 }
 
 .message p {
