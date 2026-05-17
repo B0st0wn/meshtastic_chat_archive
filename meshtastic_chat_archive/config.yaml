@@ -36,7 +36,6 @@ options:
   db_user: meshtastic
   db_password: ""
   send_topic: ""
-  poll_interval_seconds: 7
 schema:
   mqtt_host: str
   mqtt_port: port
@@ -52,4 +51,3 @@ schema:
   db_user: str
   db_password: password
   send_topic: str?
-  poll_interval_seconds: int(5,60)

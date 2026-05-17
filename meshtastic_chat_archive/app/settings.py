@@ -35,7 +35,6 @@ class Settings(BaseSettings):
     )
     send_topic: str | None = Field(default=None, alias="SEND_TOPIC")
 
-    poll_interval_seconds: int = Field(default=7, alias="POLL_INTERVAL_SECONDS")
     cors_origins: str = Field(default="*", alias="CORS_ORIGINS")
 
     @property

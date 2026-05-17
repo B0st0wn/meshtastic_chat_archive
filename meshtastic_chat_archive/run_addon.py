@@ -51,7 +51,6 @@ def main() -> None:
         "MQTT_CLIENT_ID": options.get("mqtt_client_id"),
         "MQTT_SUBSCRIBE_TOPICS": ",".join(topics),
         "SEND_TOPIC": options.get("send_topic"),
-        "POLL_INTERVAL_SECONDS": options.get("poll_interval_seconds"),
         "CORS_ORIGINS": "*",
     }
 

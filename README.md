@@ -73,7 +73,6 @@ db_name: meshtastic_chat
 db_user: meshtastic
 db_password: change-this-db-password
 send_topic: ""
-poll_interval_seconds: 7
 ```
 
 For a public MQTT server, set `mqtt_host`, `mqtt_port`, credentials, and `mqtt_tls` as required by that server.
