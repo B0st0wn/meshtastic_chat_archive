@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from db import Database
@@ -91,9 +91,18 @@ if settings.frontend_dir.exists():
     app.mount("/static", StaticFiles(directory=settings.frontend_dir), name="static")
 
 
-@app.get("/")
-def index():
+@app.get("/", response_class=HTMLResponse)
+def index() -> HTMLResponse:
     index_path = settings.frontend_dir / "index.html"
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="Frontend not found")
-    return FileResponse(index_path)
+    html = index_path.read_text(encoding="utf-8")
+    js_path = settings.frontend_dir / "app.js"
+    css_path = settings.frontend_dir / "style.css"
+    js_bust = str(int(js_path.stat().st_mtime)) if js_path.exists() else "0"
+    css_bust = str(int(css_path.stat().st_mtime)) if css_path.exists() else "0"
+    html = html.replace("static/app.js", f"static/app.js?v={js_bust}")
+    html = html.replace("static/style.css", f"static/style.css?v={css_bust}")
+    response = HTMLResponse(content=html)
+    response.headers["Cache-Control"] = "no-store"
+    return response
