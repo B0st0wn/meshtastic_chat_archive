@@ -210,9 +210,11 @@ class MeshtasticChatPanel extends HTMLElement {
             <span>${this.escape(message.sender_node_id || "")}</span>
             <span>${this.formatDateTime(message.timestamp)}</span>
             <span>${channel}</span>
-            <button class="message-delete" data-id="${message.id}" title="Delete this message" aria-label="Delete this message">×</button>
           </div>
           <p>${this.escape(message.text)}</p>
+          <div class="message-actions">
+            <button class="message-delete" type="button" data-id="${message.id}">Delete</button>
+          </div>
         </article>
       `;
     }).join("");
@@ -254,14 +256,24 @@ class MeshtasticChatPanel extends HTMLElement {
 
   assetUrl(path) {
     const cleanPath = path.replace(/^\//, "");
-    return this.apiBase ? `${this.apiBase}/${cleanPath}` : `${this.basePath}${cleanPath}`;
+    const base = this.apiBase ? `${this.apiBase}/${cleanPath}` : `${this.basePath}${cleanPath}`;
+    const cacheBust = Date.now();
+    return base.includes("?") ? `${base}&v=${cacheBust}` : `${base}?v=${cacheBust}`;
   }
 }
 
-if (!customElements.get("meshtastic-chat-panel")) {
-  customElements.define("meshtastic-chat-panel", MeshtasticChatPanel);
+console.info("[mesh-chat] app.js loaded — build with delete button v3");
+
+function defineCustomElement(name, ctor) {
+  if (customElements.get(name)) return;
+  try {
+    customElements.define(name, ctor);
+  } catch (err) {
+    // Constructor already registered under another name — extend with a stub so each name has a unique class.
+    class Alias extends ctor {}
+    try { customElements.define(name, Alias); } catch (_) { /* already registered, ignore */ }
+  }
 }
 
-if (!customElements.get("ha-panel-meshtastic-chat")) {
-  customElements.define("ha-panel-meshtastic-chat", MeshtasticChatPanel);
-}
+defineCustomElement("meshtastic-chat-panel", MeshtasticChatPanel);
+defineCustomElement("ha-panel-meshtastic-chat", MeshtasticChatPanel);
