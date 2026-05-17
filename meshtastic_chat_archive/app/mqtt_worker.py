@@ -156,6 +156,7 @@ class MqttWorker:
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
         self.client.on_message = self._on_message
+        self.client.on_subscribe = self._on_subscribe
 
     def start(self) -> None:
         LOGGER.info("Connecting to MQTT broker %s:%s", self.settings.mqtt_host, self.settings.mqtt_port)
@@ -192,12 +193,22 @@ class MqttWorker:
         self.connected = False
         LOGGER.warning("MQTT disconnected: %s", reason_code)
 
+    def _on_subscribe(self, _client: mqtt.Client, _userdata: Any, mid: int, reason_codes: Any, _properties: Any = None) -> None:
+        codes = [int(rc) for rc in reason_codes] if hasattr(reason_codes, "__iter__") else [int(reason_codes)]
+        granted = [c for c in codes if c < 128]
+        rejected = [c for c in codes if c >= 128]
+        if rejected:
+            LOGGER.error("Broker REJECTED subscribe mid=%s reason_codes=%s (likely ACL denial)", mid, codes)
+        else:
+            LOGGER.info("Broker confirmed subscribe mid=%s granted_qos=%s", mid, granted)
+
     def _on_message(self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage) -> None:
         received_at = int(time.time())
         payload = bytes(msg.payload)
         payload_hash = hashlib.sha256(payload).hexdigest()
         payload_base64 = base64.b64encode(payload).decode("ascii")
         topic = msg.topic
+        LOGGER.info("Received MQTT message on %s (%d bytes, retain=%s)", topic, len(payload), msg.retain)
 
         payload_json = None
         data: dict[str, Any] | None = None
@@ -207,7 +218,7 @@ class MqttWorker:
                 data = parsed
                 payload_json = json.dumps(parsed, separators=(",", ":"), sort_keys=True)
         except (UnicodeDecodeError, json.JSONDecodeError):
-            pass
+            LOGGER.info("Payload on %s is not JSON (likely encrypted/protobuf) — stored as raw frame only", topic)
 
         packet_id = _packet_id(data) if data else None
         self.db.insert_raw_frame(topic, payload_hash, packet_id, payload_base64, payload_json, received_at)
@@ -217,7 +228,9 @@ class MqttWorker:
 
         normalized = normalize_json_message(topic, payload_hash, data)
         if not normalized:
+            LOGGER.info("JSON on %s had no text field — stored raw, skipped chat archive (keys=%s)", topic, list(data.keys()))
             return
+        LOGGER.info("Archived message: conv=%s from=%s text=%r", normalized["conversation_key"], normalized.get("sender_node_id"), normalized["text"][:60])
 
         self.db.upsert_node(
             normalized.get("sender_node_id"),
