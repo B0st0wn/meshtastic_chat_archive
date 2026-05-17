@@ -59,8 +59,7 @@ def main() -> None:
         if value != "":
             _set_env(name, value)
 
-    os.chdir("/app")
-    uvicorn.run("main:app", host="0.0.0.0", port=8124, log_level="info")
+    uvicorn.run("main:app", host="0.0.0.0", port=8124, log_level="info", app_dir="/app")
 
 
 if __name__ == "__main__":
