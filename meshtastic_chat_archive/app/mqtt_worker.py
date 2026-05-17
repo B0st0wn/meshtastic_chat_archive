@@ -55,10 +55,14 @@ def _first(data: dict[str, Any], names: list[str]) -> Any:
 
 def _nested_text(data: dict[str, Any]) -> str | None:
     decoded = data.get("decoded") if isinstance(data.get("decoded"), dict) else {}
+    payload = data.get("payload") if isinstance(data.get("payload"), dict) else {}
+    raw_payload = data.get("payload") if isinstance(data.get("payload"), str) else None
     candidates = [
         data.get("text"),
         data.get("message"),
-        data.get("payload"),
+        raw_payload,
+        payload.get("text"),
+        payload.get("message"),
         decoded.get("text"),
         decoded.get("payload"),
         decoded.get("payloadString"),
@@ -77,12 +81,14 @@ def _packet_id(data: dict[str, Any]) -> str | None:
 
 
 def _channel_from(topic: str, data: dict[str, Any]) -> str | None:
+    parts = topic.split("/")
+    if len(parts) >= 6 and parts[2] == "2" and parts[3] in ("json", "e", "c"):
+        name = parts[-2]
+        if name and not name.startswith("!"):
+            return name
     channel = _first(data, ["channel", "channel_id", "channelId"])
     if channel is not None and channel != "":
         return str(channel)
-    parts = topic.split("/")
-    if len(parts) >= 6 and parts[2] == "2":
-        return parts[-2]
     return None
 
 
@@ -194,13 +200,13 @@ class MqttWorker:
         LOGGER.warning("MQTT disconnected: %s", reason_code)
 
     def _on_subscribe(self, _client: mqtt.Client, _userdata: Any, mid: int, reason_codes: Any, _properties: Any = None) -> None:
-        codes = [int(rc) for rc in reason_codes] if hasattr(reason_codes, "__iter__") else [int(reason_codes)]
-        granted = [c for c in codes if c < 128]
-        rejected = [c for c in codes if c >= 128]
+        codes_iter = reason_codes if isinstance(reason_codes, (list, tuple)) else [reason_codes]
+        values = [getattr(rc, "value", rc) for rc in codes_iter]
+        rejected = [v for v in values if isinstance(v, int) and v >= 128]
         if rejected:
-            LOGGER.error("Broker REJECTED subscribe mid=%s reason_codes=%s (likely ACL denial)", mid, codes)
+            LOGGER.error("Broker REJECTED subscribe mid=%s codes=%s (likely ACL denial)", mid, values)
         else:
-            LOGGER.info("Broker confirmed subscribe mid=%s granted_qos=%s", mid, granted)
+            LOGGER.info("Broker confirmed subscribe mid=%s codes=%s", mid, values)
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage) -> None:
         received_at = int(time.time())
