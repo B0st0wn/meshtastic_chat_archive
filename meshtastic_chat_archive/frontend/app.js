@@ -116,6 +116,13 @@ class MeshtasticChatPanel extends HTMLElement {
       this.searchDebounce = window.setTimeout(() => this.search(event.target.value), 250);
     });
 
+    root.querySelector(".message-list").addEventListener("click", async (event) => {
+      const button = event.target.closest(".message-delete");
+      if (!button) return;
+      event.preventDefault();
+      await this.deleteMessage(button.dataset.id);
+    });
+
     root.querySelector(".composer").addEventListener("submit", async (event) => {
       event.preventDefault();
       const input = root.querySelector(".composer-input");
@@ -197,18 +204,29 @@ class MeshtasticChatPanel extends HTMLElement {
       const short = message.sender_short_name ? ` (${this.escape(message.sender_short_name)})` : "";
       const channel = message.channel ? `#${this.escape(message.channel)}` : "mesh";
       return `
-        <article class="message">
+        <article class="message" data-id="${message.id}">
           <div class="message-meta">
             <strong>${this.escape(sender)}${short}</strong>
             <span>${this.escape(message.sender_node_id || "")}</span>
             <span>${this.formatDateTime(message.timestamp)}</span>
             <span>${channel}</span>
+            <button class="message-delete" data-id="${message.id}" title="Delete this message" aria-label="Delete this message">×</button>
           </div>
           <p>${this.escape(message.text)}</p>
         </article>
       `;
     }).join("");
     list.scrollTop = list.scrollHeight;
+  }
+
+  async deleteMessage(id) {
+    if (!window.confirm("Delete this message permanently?")) return;
+    try {
+      await this.api(`/api/messages/${id}`, { method: "DELETE" });
+      await this.refresh();
+    } catch (error) {
+      this.shadowRoot.querySelector(".status").textContent = "Delete failed.";
+    }
   }
 
   formatTime(unix) {

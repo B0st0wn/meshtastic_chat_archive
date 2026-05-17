@@ -76,6 +76,13 @@ def search(q: str = Query(min_length=1)) -> list[Message]:
     return [row_to_message(row) for row in db.search_messages(q)]
 
 
+@app.delete("/api/messages/{message_id}")
+def delete_message(message_id: int) -> dict:
+    if not db.delete_message(message_id):
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"ok": True}
+
+
 @app.post("/api/send", response_model=SendResponse)
 def send(request: SendRequest) -> SendResponse:
     try:

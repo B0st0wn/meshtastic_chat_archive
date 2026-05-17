@@ -1,5 +1,5 @@
 name: Meshtastic Chat Archive
-version: 0.2.0_17
+version: 0.2.0_18
 slug: meshtastic_chat_archive
 description: Persistent Meshtastic MQTT chat archive with external MariaDB storage
 url: https://github.com/B0st0wn/meshtastic_chat_archive

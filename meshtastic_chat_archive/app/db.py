@@ -295,6 +295,51 @@ class Database:
             )
             return list(reversed(rows))
 
+    def delete_message(self, message_id: int) -> bool:
+        with self._lock:
+            rows = self._fetchall(
+                "SELECT payload_hash, conversation_key FROM messages WHERE id = %s",
+                (message_id,),
+            )
+            if not rows:
+                return False
+            payload_hash = rows[0]["payload_hash"]
+            conversation_key = rows[0]["conversation_key"]
+
+            self._execute("DELETE FROM messages WHERE id = %s", (message_id,))
+            self._execute("DELETE FROM raw_frames WHERE payload_hash = %s", (payload_hash,))
+
+            remaining = self._fetchall(
+                """
+                SELECT id, timestamp FROM messages
+                WHERE conversation_key = %s
+                ORDER BY timestamp DESC, id DESC
+                LIMIT 1
+                """,
+                (conversation_key,),
+            )
+            now = int(time.time())
+            if remaining:
+                self._execute(
+                    """
+                    UPDATE conversations
+                    SET last_message_id = %s, last_message_at = %s, updated_at = %s
+                    WHERE conversation_key = %s
+                    """,
+                    (remaining[0]["id"], remaining[0]["timestamp"], now, conversation_key),
+                )
+            else:
+                self._execute(
+                    """
+                    UPDATE conversations
+                    SET last_message_id = NULL, last_message_at = NULL, updated_at = %s
+                    WHERE conversation_key = %s
+                    """,
+                    (now, conversation_key),
+                )
+            self.conn.commit()
+            return True
+
     def search_messages(self, query: str) -> list[dict[str, Any]]:
         like = f"%{query}%"
         with self._lock:

@@ -166,6 +166,31 @@ h1 {
   font-size: 13px;
 }
 
+.message-delete {
+  margin-left: auto;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #98a3aa;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.message:hover .message-delete,
+.message-delete:focus {
+  opacity: 1;
+}
+
+.message-delete:hover {
+  color: #b3261e;
+  background: #fdecea;
+  border-color: #f3c7c2;
+}
+
 .message p {
   overflow-wrap: anywhere;
   line-height: 1.45;
